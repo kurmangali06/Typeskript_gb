@@ -1,43 +1,80 @@
-export function renderBlock (elementId: string, html:string) {
-  const element = document.getElementById(elementId);
-  if(element) {
-    element.innerHTML = html
-  }
+import { User } from '../models/user';
+
+export function toggleFavouriteItem (): void {
 
 }
 
-type Messages = {
-  text: string,
-  type: string
+type Message = {
+  type: string,
+  text: string
 }
 type Action = {
   name: string,
   handler:  () => void |null
 }
-export function renderToast (message:Messages | null, action?: Action) {
-  let messageText = ''
-  
+
+
+export function getUserData(): User | null {
+  const rawUserData = localStorage.getItem('user');
+  let userData: unknown;
+  if (rawUserData) {
+    userData = JSON.parse(rawUserData);
+  }
+  if (
+    typeof userData === 'object' &&
+    'username' in userData &&
+    'avatarUrl' in userData
+  ) {
+    return userData as User;
+  }
+
+  return JSON.parse(rawUserData);
+}
+
+export function saveUserDataInLocalStorage(
+  userName: string,
+  avatarUrl: string
+): void {
+  localStorage.setItem(
+    'user',
+    JSON.stringify({ username: userName, avatarUrl: avatarUrl })
+  );
+}
+
+export function getFavoritesAmount(): number {
+  const favoritesAmount = localStorage.getItem('favoritesAmount');
+  if (favoritesAmount == null) return 0;
+  return JSON.parse(favoritesAmount);
+}
+
+export function renderBlock(elementId: string, html: string): void {
+  const element = document.getElementById(elementId);
+  if(element) {
+    element.innerHTML = html
+  }
+}
+
+export function renderToast(message :Message | null, action? : Action) {
+  let messageText = '';
+
   if (message != null) {
     messageText = `
       <div id="info-block" class="info-block ${message.type}">
         <p>${message.text}</p>
         <button id="toast-main-action">${action?.name || 'Закрыть'}</button>
       </div>
-    `
+    `;
   }
-  
-  renderBlock(
-    'toast-block',
-    messageText
-  )
 
-  const button = document.getElementById('toast-main-action')
+  renderBlock('toast-block', messageText);
+
+  const button = document.getElementById('toast-main-action');
   if (button != null) {
-    button.onclick = function() {
+    button.onclick = function () {
       if (action && action.handler !== null) {
-        action?.handler()
+        action?.handler();
       }
-      renderToast(null)
-    }
+      renderToast(null);
+    };
   }
 }
